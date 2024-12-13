@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+    <style>
+        .main {
+            font-family: 'Arial', sans-serif;
+            margin: auto;
+            padding: 0;
+            background: linear-gradient(to bottom, #7bd29b75 40%, #ffffff 60%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 70%
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 12px;
+
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background-color: #f44336;
+            padding: 30px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .header img {
+            width: 120px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .platform-name {
+            font-size: 24px;
+            font-weight: normal;
+            margin-top: 5px;
+        }
+
+        .content {
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .verification-code {
+            display: block;
+            margin: 30px 0;
+            font-size: 28px;
+            color: #fff;
+            background-color: #58b749cc;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            /* box-shadow: 0 0 15px #f8b44d, 0 0 30px #f8b44d, 0 0 45px #f8b44d; */
+            animation: glow 1.5s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px #f8b44d, 0 0 20px #f8b44d, 0 0 30px #f8b44d;
+            }
+
+            100% {
+                box-shadow: 0 0 20px #f8b44d, 0 0 40px #f8b44d, 0 0 60px #f8b44d;
+            }
+        }
+
+
+        .cta-button {
+            background-color: #4caf50;
+            color: white;
+            padding: 18px 35px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            background-color: #388e3c;
+        }
+
+        .footer {
+            background-color: #f1f1f1;
+            padding: 20px;
+            color: #777;
+            font-size: 14px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        p {
+            margin: 0 0 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <div class="header">
+                <div>Welcome to Pakistani Truck!</div>
+                <div class="platform-name">Your Email Verification</div>
+            </div>
+            <div class="content">
+                <p>Hey there!</p>
+                <p>We're excited to have you on board. To complete your registration with Pakistani Truck, please verify
+                    your email by entering the following code:</p>
+                <span class="verification-code">{verificationCode}</span>
+                <p>If you didn’t sign up, no further action is needed. If you need assistance, our team is here to help!
+                </p>
+                <a href="#" class="cta-button">Confirm Your Email</a>
+            </div>
+            <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} Pakistani Truck. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
