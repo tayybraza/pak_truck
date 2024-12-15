@@ -253,43 +253,51 @@ class UserController {
     async verifyShopAccount(req, res) {
         try {
             const { idCardFront, idCardBack, shopPicture } = req.files;
-    
+
             if (!idCardFront || !idCardBack || !shopPicture) {
                 return res.status(400).json({ message: 'All files (idCardFront, idCardBack, shopPicture) are required!' });
             }
-    
+
             console.log('Files received:', idCardFront, idCardBack, shopPicture);
-    
+
+            // Pass data to the service method for shop verification
             const result = await authService.processShopVerification(req.body, {
                 idCardFront,
                 idCardBack,
                 shopPicture,
             });
-    
+
             res.status(200).json({ message: 'Shop account verified successfully!', data: result });
         } catch (error) {
             console.error('Error verifying shop account:', error);
             res.status(500).json({ message: 'Error verifying shop account', error: error.message });
         }
     }
-    
+
+
     // Verify Individual Account
     async verifyIndividualAccount(req, res) {
         try {
             const { idCardFront, idCardBack } = req.files;
+
             if (!idCardFront || !idCardBack) {
                 return res.status(400).json({ message: 'Both idCardFront and idCardBack are required!' });
             }
+
+            // Pass data to the service method for individual verification
             const result = await authService.processIndividualVerification(req.body, {
                 idCardFront,
                 idCardBack,
             });
+
             res.status(200).json({ message: 'Individual account verified successfully!', data: result });
         } catch (error) {
             console.error('Error verifying individual account:', error);
             res.status(500).json({ message: 'Error verifying individual account', error: error.message });
         }
     }
+
+
 
 }
 

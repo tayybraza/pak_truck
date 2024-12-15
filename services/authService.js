@@ -232,32 +232,60 @@ class AuthService {
         }
     }
 
+
     // Process Shop Verification
-    async verifyShopAccount(req, res) {
+    async processShopVerification(userData, files) {
         try {
-            const { idCardFront, idCardBack, shopPicture } = req.files;
-    
+            const { idCardFront, idCardBack, shopPicture } = files;
+
+            // Validate the presence of required files
             if (!idCardFront || !idCardBack || !shopPicture) {
-                return res.status(400).json({ message: 'All files (idCardFront, idCardBack, shopPicture) are required!' });
+                throw new Error('All files (idCardFront, idCardBack, shopPicture) are required!');
             }
-    
-            console.log('Files received:', idCardFront, idCardBack, shopPicture);
-    
-            const result = await authService.processShopVerification(req.body, {
-                idCardFront,
-                idCardBack,
-                shopPicture,
-            });
-    
-            res.status(200).json({ message: 'Shop account verified successfully!', data: result });
+
+            // Check if email is provided
+            if (!userData.cnic) {
+                throw new Error('Cnic is required for verification');
+            }
+
+            console.log('userData.cnic:', userData.cnic);
+
+            // Check if the user exists in the database
+            const existingUser = await User.findOne({ cnic: userData.cnic });
+
+            if (!existingUser) {
+                throw new Error('User not found');
+            }
+
+            // Prepare the data to save to the database
+            const verificationData = {
+                ...userData,  // Include user data (such as email, name, etc.)
+                idCardFront: idCardFront[0].path,  // Path to the ID card front
+                idCardBack: idCardBack[0].path,  // Path to the ID card back
+                shopPicture: shopPicture[0].path,  // Path to the shop picture
+                verificationDate: new Date(),  // Date when verification was done
+                verificationDocuments: true,  // Mark the documents as verified
+            };
+
+            // Update the user in the database with the verification data
+            const updatedUser = await User.findOneAndUpdate(
+                { cnic: userData.cnic },  // Find the user by email
+                { $set: verificationData },  // Set the new verification data
+                { new: true }  // Return the updated user document
+            );
+
+            if (!updatedUser) {
+                throw new Error('Error updating user');
+            }
+
+            return updatedUser;
         } catch (error) {
-            console.error('Error verifying shop account:', error);
-            res.status(500).json({ message: 'Error verifying shop account', error: error.message });
+            throw new Error(`Error processing shop verification: ${error.message}`);
         }
     }
-    
 
-    // Process Individual Verification
+
+    // Process Individual Verification (this function seems okay)
     async processIndividualVerification(userData, files) {
         try {
             const { idCardFront, idCardBack } = files;

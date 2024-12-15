@@ -4,7 +4,7 @@ const userController = require('../controllers/userController');
 const authService = require('../services/authService');
 const { SendOTP } = require('../controllers/otpController');
 const authMiddleware = require('../middleware/authMiddleware');
-const { shopVerificationSchema, individualVerificationSchema,} = require('../validations/userValidation');
+const upload = require('../middleware/fileUpload');
 
 // Initialize the router
 const router = express.Router();
@@ -67,6 +67,21 @@ router.delete('/user/delete/:userId', userController.deleteUser);
 
 // Send OTP route
 router.post('/send-otp', SendOTP);
+
+
+// Shop Verification Route (with file uploads)
+router.post('/verify/shop', upload.fields([
+    { name: 'idCardFront', maxCount: 1 },
+    { name: 'idCardBack', maxCount: 1 },
+    { name: 'shopPicture', maxCount: 1 }
+]), userController.verifyShopAccount);
+
+// Individual Verification Route (with file uploads)
+router.post('/verify/individual', upload.fields([
+    { name: 'idCardFront', maxCount: 1 },
+    { name: 'idCardBack', maxCount: 1 }
+]), userController.verifyIndividualAccount);
+
 
 // Export the router
 module.exports = router;
