@@ -158,30 +158,43 @@ class UserController {
     async blockUser(req, res) {
         try {
             const { userId } = req.params;
+            const { reason } = req.body; // Get reason from request body
+
+            // Check if the user is admin
             if (req.user.role !== 'admin') {
                 return res.status(403).json({ message: 'You do not have permission to block users' });
             }
 
+            // Validate reason
+            const validReasons = ["Violation of Terms", "Inappropriate Behavior", "Spamming", "Suspicious Activity"];
+            if (!validReasons.includes(reason)) {
+                return res.status(400).json({ message: 'Invalid block reason' });
+            }
+
+            // Find the user by ID
             const user = await User.findById(userId);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            user.isBlocked = true;  // Block the user
-            await user.save();  // Save the user after updating the block status
+            // Block the user and set the reason
+            user.isBlocked = true;
+            user.blockReason = reason;
+            await user.save(); // Save the changes
 
-            // Send complete user data after update
             res.status(200).json({
                 message: 'User blocked successfully',
                 user: {
                     _id: user._id,
                     email: user.email,
                     role: user.role,
-                    isBlocked: user.isBlocked  // Ensure 'isBlocked' is included
+                    isBlocked: user.isBlocked,
+                    blockReason: user.blockReason
                 }
             });
 
         } catch (error) {
+            console.error('Error blocking user:', error);
             res.status(400).json({ message: error.message });
         }
     }
@@ -190,30 +203,34 @@ class UserController {
     async unlockUser(req, res) {
         try {
             const { userId } = req.params;
+
             if (req.user.role !== 'admin') {
                 return res.status(403).json({ message: 'You do not have permission to unlock users' });
             }
 
-            const user = await User.findById(userId); // Find user by ID
+            const user = await User.findById(userId);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            user.isBlocked = false;  // Unlock the user (set isBlocked to false)
-            await user.save();  // Save the updated user
+            // Unlock the user and clear the block reason
+            user.isBlocked = false;
+            user.blockReason = null;
+            await user.save();
 
-            // Send complete user data after update
             res.status(200).json({
                 message: 'User unlocked successfully',
                 user: {
                     _id: user._id,
                     email: user.email,
                     role: user.role,
-                    isBlocked: user.isBlocked  // Ensure 'isBlocked' is correctly updated
+                    isBlocked: user.isBlocked,
+                    blockReason: user.blockReason
                 }
             });
 
         } catch (error) {
+            console.error('Error unlocking user:', error);
             res.status(400).json({ message: error.message });
         }
     }
@@ -231,6 +248,49 @@ class UserController {
             res.status(400).json({ message: error.message });
         }
     }
+
+    // Verify Shop Account
+    async verifyShopAccount(req, res) {
+        try {
+            const { idCardFront, idCardBack, shopPicture } = req.files;
+    
+            if (!idCardFront || !idCardBack || !shopPicture) {
+                return res.status(400).json({ message: 'All files (idCardFront, idCardBack, shopPicture) are required!' });
+            }
+    
+            console.log('Files received:', idCardFront, idCardBack, shopPicture);
+    
+            const result = await authService.processShopVerification(req.body, {
+                idCardFront,
+                idCardBack,
+                shopPicture,
+            });
+    
+            res.status(200).json({ message: 'Shop account verified successfully!', data: result });
+        } catch (error) {
+            console.error('Error verifying shop account:', error);
+            res.status(500).json({ message: 'Error verifying shop account', error: error.message });
+        }
+    }
+    
+    // Verify Individual Account
+    async verifyIndividualAccount(req, res) {
+        try {
+            const { idCardFront, idCardBack } = req.files;
+            if (!idCardFront || !idCardBack) {
+                return res.status(400).json({ message: 'Both idCardFront and idCardBack are required!' });
+            }
+            const result = await authService.processIndividualVerification(req.body, {
+                idCardFront,
+                idCardBack,
+            });
+            res.status(200).json({ message: 'Individual account verified successfully!', data: result });
+        } catch (error) {
+            console.error('Error verifying individual account:', error);
+            res.status(500).json({ message: 'Error verifying individual account', error: error.message });
+        }
+    }
+
 }
 
 module.exports = new UserController();

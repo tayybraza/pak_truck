@@ -12,8 +12,18 @@ class AuthService {
         try {
             const { email, otp, password } = userDetails;
 
-            // Check if user already exists
+            // Check if the CNIC is blocked
+            const blockedCnic = await User.findOne({ blockedCnic: cnic });
+            if (blockedCnic) {
+                throw new Error('Your CNIC is blocked. Registration not allowed.');
+            }
+
+            // Check if email already exists
             let user = await User.findOne({ email });
+            if (user) {
+                throw new Error('User already exists with this email.');
+            }
+
             if (user) {
                 // If user exists but not verified, check OTP
                 if (!user.verified && user.otp === otp && Date.now() < user.otpExpiry) {
@@ -168,29 +178,45 @@ class AuthService {
         }
     }
 
-    // Block user (Only admin access)
+    // Block user and add CNIC to the blocked list
     async blockUser(userId) {
         try {
             const user = await User.findById(userId);
             if (!user) throw new Error('User not found');
+
+            if (!user.cnic) {
+                throw new Error('User CNIC not available. Cannot block user.');
+            }
+
+            // Check if CNIC is already in blocked list
+            if (!user.blockedCnic.includes(user.cnic)) {
+                user.blockedCnic.push(user.cnic);
+            }
+
             user.isBlocked = true;
             await user.save();
-            return { message: 'User blocked successfully', user };
+
+            return { message: 'User blocked and CNIC added to blocked list', user };
         } catch (error) {
-            throw handleError(error);
+            console.error('Error blocking user:', error.message);
+            throw new Error(error.message);
         }
     }
 
-    // Unlock user (Only admin access)
-    async unlockUser(userId) {
+    // Unblock user and remove CNIC from the blocked list
+    async unblockUser(userId) {
         try {
             const user = await User.findById(userId);
             if (!user) throw new Error('User not found');
+
             user.isBlocked = false;
+            user.blockedCnic = user.blockedCnic.filter(cnic => cnic !== user.cnic);
             await user.save();
-            return { message: 'User unlocked successfully', user };
+
+            return { message: 'User unblocked and CNIC removed from blocked list', user };
         } catch (error) {
-            throw handleError(error);
+            console.error('Error unblocking user:', error.message);
+            throw new Error(error.message);
         }
     }
 
@@ -203,6 +229,51 @@ class AuthService {
             return { message: 'User deleted successfully' };
         } catch (error) {
             throw handleError(error);
+        }
+    }
+
+    // Process Shop Verification
+    async verifyShopAccount(req, res) {
+        try {
+            const { idCardFront, idCardBack, shopPicture } = req.files;
+    
+            if (!idCardFront || !idCardBack || !shopPicture) {
+                return res.status(400).json({ message: 'All files (idCardFront, idCardBack, shopPicture) are required!' });
+            }
+    
+            console.log('Files received:', idCardFront, idCardBack, shopPicture);
+    
+            const result = await authService.processShopVerification(req.body, {
+                idCardFront,
+                idCardBack,
+                shopPicture,
+            });
+    
+            res.status(200).json({ message: 'Shop account verified successfully!', data: result });
+        } catch (error) {
+            console.error('Error verifying shop account:', error);
+            res.status(500).json({ message: 'Error verifying shop account', error: error.message });
+        }
+    }
+    
+
+    // Process Individual Verification
+    async processIndividualVerification(userData, files) {
+        try {
+            const { idCardFront, idCardBack } = files;
+
+            // Example logic: Store file paths and user data in a database
+            const individualVerificationData = {
+                ...userData,
+                idCardFront: idCardFront[0].path,
+                idCardBack: idCardBack[0].path,
+            };
+
+            // Replace with actual DB call
+            console.log('Saving individual verification data:', individualVerificationData);
+            return individualVerificationData;
+        } catch (error) {
+            throw new Error(`Error processing individual verification: ${error.message}`);
         }
     }
 }

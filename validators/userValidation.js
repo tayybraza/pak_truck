@@ -37,4 +37,16 @@ let ResetpasswordSchema = joi.object({
     otp: joi.string().pattern(new RegExp('^\\d{6}$'))
 })
 
-module.exports = { SendotpSchema, SignupSchema, SigninSchema, ResetpasswordSchema };
+// Schemas for different operations
+const shopVerificationSchema = joi.object({
+    idCardFront: joi.string().required(),
+    idCardBack: joi.string().required(),
+    shopPicture: joi.string().required(),
+});
+
+const individualVerificationSchema = joi.object({
+    idCardFront: joi.string().required(),
+    idCardBack: joi.string().required(),
+});
+
+module.exports = { SendotpSchema, SignupSchema, SigninSchema, ResetpasswordSchema, shopVerificationSchema, individualVerificationSchema };

@@ -1,8 +1,11 @@
 // Import required modules
 const express = require('express');
 const userController = require('../controllers/userController');
+const authService = require('../services/authService');
 const { SendOTP } = require('../controllers/otpController');
 const authMiddleware = require('../middleware/authMiddleware');
+const { shopVerificationSchema, individualVerificationSchema,} = require('../validations/userValidation');
+
 // Initialize the router
 const router = express.Router();
 
@@ -33,10 +36,31 @@ router.get('/profile', authMiddleware, userController.getProfileUser);
 router.put('/update-profile', authMiddleware, userController.updateUserProfile);
 
 // Block user (Only admin)
-router.patch('/user/block/:userId', authMiddleware, userController.blockUser);
+// router.post('/user/block/:userId', authMiddleware, userController.blockUser);
+
+router.post('/user/block/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await authService.blockUser(userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Unblock User
+router.post('/user/unlock/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await authService.unblockUser(userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 // Unlock user (Only admin)
-router.patch('/user/unlock/:userId', authMiddleware, userController.unlockUser);
+// router.patch('/user/unlock/:userId', authMiddleware, userController.unlockUser);
 
 // Delete user (Only admin)
 router.delete('/user/delete/:userId', userController.deleteUser);
