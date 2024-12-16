@@ -5,11 +5,46 @@ const authService = require('../services/authService');
 const { SendOTP } = require('../controllers/otpController');
 const authMiddleware = require('../middleware/authMiddleware');
 const upload = require('../middleware/fileUpload');
+const passport = require('passport');
 
 // Initialize the router
 const router = express.Router();
 
 // Define the routes
+// Google Auth Routes
+// Route to initiate Google Authentication
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Callback route after Google Authentication
+router.get(
+    '/google/callback',
+    passport.authenticate('google', { failureRedirect: '/api/auth/fail' }),
+    (req, res) => {
+        res.status(200).json({
+            success: true,
+            message: 'Google Authentication Successful',
+            user: req.user,
+        });
+    }
+);
+
+// Route for failed login
+router.get('/fail', (req, res) => {
+    res.status(401).json({ success: false, message: 'Google Authentication Failed' });
+});
+
+// router.get(
+//     '/auth/google/callback',
+//     passport.authenticate('google', { failureRedirect: '/signin' }),
+//     async (req, res) => {
+//         try {
+//             const token = authService.generateGoogleToken(req.user);
+//             res.status(200).json({ message: 'Login successful', token });
+//         } catch (error) {
+//             res.status(500).json({ error: error.message });
+//         }
+//     }
+// );
 
 // Sign Up route
 router.post('/signup', userController.signup);

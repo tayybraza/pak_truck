@@ -1,4 +1,3 @@
-// index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
@@ -12,41 +11,18 @@ const logger = require('./utils/logger');
 const cookieParser = require('cookie-parser');
 const cron = require('node-cron');
 const path = require('path');
+const passport = require("passport");
+const session = require("express-session");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-// Chat Routes
-// const chatRoutes = require('./routes/chatRoutes');
-
-// Other Routes
-// const roleRoutes = require('./routes/roleRoutes');
-// const userRoutes = require('./routes/userRoutes');
-const authRoutes = require('./routes/authRoutes');
-// const courseRoutes = require('./routes/courseRoutes');
-// const studentRoutes = require('./routes/studentRoutes');
-// const installmentRoutes = require('./routes/installmentRoutes');
-// const taskRoutes = require('./routes/taskRoutes');
-// const attendanceRoutes = require('./routes/attendanceRoutes');
-// const progressNoteRoutes = require('./routes/progressNoteRoutes');
-// const studentReportRoutes = require('./routes/studentReportRoutes');
-// const notificationRoutes = require('./routes/notificationRoutes');
-// const groupRoutes = require('./routes/group');
-// const onlineClasses = require('./routes/onlineClasses');
+// Create Express app
+const app = express();
 
 // Load env vars
 dotenv.config({ path: './config/.env' });
 
-// Debug environment variables
-// console.log('MONGO_URL:', process.env.MONGO_URL);
-// console.log('PORT:', process.env.PORT);
-// console.log('NODE_ENV:', process.env.NODE_ENV);
-// console.log('JWT_SECRET:', process.env.JWT_SECRET);
-// console.log('JWT_EXPIRE:', process.env.JWT_EXPIRE);
-
 // Connect to database
 connectDB();
-
-const app = express();
-const server = http.createServer(app);
-const io = socketio(server);
 
 // Body parser
 app.use(express.json());
@@ -63,22 +39,42 @@ app.use(cors({ origin: '*' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cookieParser());
 
+// Session and passport setup
+app.use(
+    session({
+      secret: "secret",
+      resave: false,
+      saveUninitialized: true,
+    })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:8000/api/auth/google/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, profile);
+    }
+  )
+);
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+
 // Mount routers
-// app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/roles', roleRoutes);
-// app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-// app.use('/api/courses', courseRoutes);
-// app.use('/api/students', studentRoutes);
-// app.use('/api/installments', installmentRoutes);
-// app.use('/api/tasks', taskRoutes);
-// app.use('/api/attendance', attendanceRoutes);
-// app.use('/api/progress-notes', progressNoteRoutes);
-// app.use('/api/studentReports', studentReportRoutes);
-// app.use('/api/notifications', notificationRoutes);
-// app.use('/api/groups', groupRoutes);
-// app.use('/api/online-classes', onlineClasses);
-// app.use('/api/chats', chatRoutes); // Chat Routes
+
+// Chat routes can also go here
+// app.use('/api/chats', chatRoutes);
 
 // Welcome API
 app.get('/', (req, res) => {
@@ -88,7 +84,10 @@ app.get('/', (req, res) => {
 // Error handler
 app.use(errorHandler);
 
-// Socket.io Configuration
+// Socket.io setup
+const server = http.createServer(app);
+const io = socketio(server);
+
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 

@@ -21,6 +21,10 @@
             },
             minLength: [8, "Password must have at least 8 characters"],
         },
+        googleId: { // Field for Google authentication
+            type: String,
+            default: null,
+        },
         accountMode: {
             type: String,
             enum: ["individual", "shop"],

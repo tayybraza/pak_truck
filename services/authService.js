@@ -304,6 +304,13 @@ class AuthService {
             throw new Error(`Error processing individual verification: ${error.message}`);
         }
     }
+
+    generateGoogleToken(user) {
+        return jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, {
+            expiresIn: process.env.JWT_EXPIRE,
+        });
+    }
+    
 }
 
 
